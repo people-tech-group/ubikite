@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
             },
-            "defaultValue": ""
+            "defaultValue": "https://raw.githubusercontent.com/people-tech-group/ubikite/master/Create%20and%20Provision%20WVD%20host%20pool"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
