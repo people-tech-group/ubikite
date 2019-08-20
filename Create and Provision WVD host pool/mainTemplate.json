@@ -73,8 +73,7 @@
             "type": "Int",
             "metadata": {
                 "description": "Index value"
-            },
-            "defaultValue": "0"
+            }
         },
         "rdshNumberOfInstances": {
             "type": "int",
