@@ -206,12 +206,14 @@
         },
         "fsStorageAccountKey": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Storage Account Key"
             }
         },
         "fileShareURI": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Storage Account with file share URL \\StorageAccountname\fileshare"
             }
