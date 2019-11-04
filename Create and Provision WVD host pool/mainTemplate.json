@@ -3,11 +3,11 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "_artifactsLocation": {
+            "defaultValue": "https://raw.githubusercontent.com/people-tech-group/ubikite/master/Create%20and%20Provision%20WVD%20host%20pool",
             "type": "string",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
-            },
-            "defaultValue": "https://raw.githubusercontent.com/people-tech-group/ubikite/master/Create%20and%20Provision%20WVD%20host%20pool"
+            }
         },
         "_artifactsLocationSasToken": {
             "defaultValue": "",
@@ -197,6 +197,25 @@
                 "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
             }
         },
+        "isFSLogixContainerConfiguration": {
+            "defaultValue": false,
+            "type": "bool",
+            "metadata": {
+                "description": "The boolean value indicating if the fs logix container configuration."
+            }
+        },
+        "fsStorageAccountKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Storage Account Key"
+            }
+        },
+        "fileShareURI": {
+            "type": "string",
+            "metadata": {
+                "description": "Storage Account with file share URL \\StorageAccountname\fileshare"
+            }
+        },
         "tenantAdminUpnOrApplicationId": {
             "type": "string",
             "metadata": {
@@ -246,6 +265,7 @@
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
         "indexStartValue": "[add(parameters('indexStart'),1)]",
+        "scriptURI": "[concat(parameters('_artifactsLocation'),'/DSC/FSLogixConfiguration.ps1')]",
         "rdshVmNamesOutput": {
             "copy": [
                 {
@@ -408,6 +428,35 @@
             },
             "copy": {
                 "name": "additional-rdsh-dsc-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "condition": "[equals(parameters('isFSLogixContainerConfiguration'),bool('True'))]",
+            "apiVersion": "2015-06-15",
+            "name": "[concat(variables('rdshPrefix'),if(less(variables('indexStartValue'),10),concat('0',copyindex(variables('indexStartValue'))),concat(copyindex(variables('indexStartValue')))),'/','FSLogixConfig')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "additional-rdsh-dsc-loop"
+            ],
+            "tags": {
+                "displayName": "script"
+            },
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.8",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[variables('scriptURI')]"
+                    ],
+                    "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File FSLogixConfiguration.ps1', ' -StorageAccountKey \"', parameters('fsStorageAccountKey'), '\"', ' ', ' -FileShareURL \"', parameters('fileShareURI'), '\"')]"
+                }
+            },
+            "copy": {
+                "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
             }
         }
