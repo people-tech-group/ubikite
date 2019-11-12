@@ -27,10 +27,10 @@ param(
 )
 `$DriveInfo = Get-PSDrive -Name b -ErrorAction SilentlyContinue
 if(`$DriveInfo -eq `$null){
-net use b: `$FileShareURL `$StorageAccountKey /user:Azure\`$StorageAccount
+net use b: $FileShareURL $StorageAccountKey /user:Azure\$StorageAccount
 }
 foreach(`$SignInName in `$SignInNames){
-cmd /c "icacls y: /grant `${`$SignInName}:(f)"
+cmd /c "icacls b: /grant `${`$SignInName}:(f)"
 }
 "@| Out-File "C:\UbikitePSL\FSGrantingToUser.ps1"
 
