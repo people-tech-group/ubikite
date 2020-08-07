@@ -18,7 +18,7 @@ param(
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 # Check if user session shadow setup enable
 if($IsUserSessionShadow){
-$GpDownloadURI=""
+$GpDownloadURI="https://raw.githubusercontent.com/people-tech-group/ubikite/master/Add%20Sessionhosts%20to%20hostpool/DSC/GroupPolicies.zip"
 $OutFile= "C:\GroupPolicies.zip"
 $DestinationPath="C:\GroupPolicies"
 New-Item -Path $DestinationPath -ItemType "directory"
