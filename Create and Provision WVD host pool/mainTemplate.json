@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "_artifactsLocation": {
-            "defaultValue": "https://raw.githubusercontent.com/people-tech-group/ubikite/master/Create%20and%20Provision%20WVD%20host%20pool",
+            "defaultValue": "https://raw.githubusercontent.com/people-tech-group/ubikite/master/Add%20Sessionhosts%20to%20hostpool/",
             "type": "string",
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located."
@@ -163,31 +163,17 @@
             "metadata": {
                 "description": "The resource group containing the existing virtual network."
             }
-        },
-        "rdBrokerURL": {
-            "defaultValue": "https://rdbroker.wvd.microsoft.com",
-            "type": "string",
-            "metadata": {
-                "description": "The Broker URL of the Windows Virtual Desktop deployment the session hosts will be connected to."
-            }
-        },
-        "existingTenantGroupName": {
-            "defaultValue": "Default Tenant Group",
-            "type": "string",
-            "metadata": {
-                "description": "The name of the tenant group in the Windows Virtual Desktop deployment"
-            }
-        },
-        "existingTenantName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the tenant in the Windows Virtual Desktop deployment."
-            }
-        },
+        }, 
         "hostPoolName": {
             "type": "string",
             "metadata": {
-                "description": "The name of the hostpool to be created in the RDS Tenant."
+                "description": "The name of the hostpool"
+            }
+        },
+        "hostpoolToken": {
+            "type": "string",
+            "metadata": {
+                "description": "Hostpool token"
             }
         },
         "enablePersistentDesktop": {
@@ -195,6 +181,34 @@
             "type": "bool",
             "metadata": {
                 "description": "Set this parameter to true if you would like to enable Persistent Desktop experience. Defaults to false."
+            }
+        },
+        "IsUserSessionShadow": {
+            "defaultValue": false,
+            "type": "bool",
+            "metadata": {
+                "description": "The boolean value indicating if the user session shadow either MSTSC or MSRA configuration."
+            }
+        },
+        "ShadowSessionMSRA": {
+            "defaultValue": false,
+            "type": "bool",
+            "metadata": {
+                "description": "The boolean value indicating if the user session shadow MSRA configuration."
+            }
+        },
+        "ShadowSessionMSRAOption": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Provide user session shadow MSRA options"
+            }
+        },
+        "ShadowSessionMSTSCOption": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Provide user session shadow MSTSC options"
             }
         },
         "isFSLogixContainerConfiguration": {
@@ -205,43 +219,45 @@
             }
         },
         "fsStorageAccountKey": {
-            "type": "string",
             "defaultValue": "",
+            "type": "string",
             "metadata": {
                 "description": "Storage Account Key"
             }
         },
         "fileShareURI": {
-            "type": "string",
             "defaultValue": "",
+            "type": "string",
             "metadata": {
                 "description": "Storage Account with file share URL \\StorageAccountname\fileshare"
             }
         },
-        "tenantAdminUpnOrApplicationId": {
-            "type": "string",
-            "metadata": {
-                "description": "The template will fail if you enter a user account that requires MFA or an application that is secured by a certificate. The UPN or ApplicationId must be an RDS Owner in the Windows Virtual Desktop Tenant to create the hostpool or an RDS Owner of the host pool to provision the host pool with additional VMs."
-            }
-        },
-        "tenantAdminPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The password that corresponds to the tenant admin UPN."
-            }
-        },
-        "isServicePrincipal": {
-            "defaultValue": false,
-            "type": "bool",
-            "metadata": {
-                "description": "The boolean value indicating if the credentials are for a service principal."
-            }
-        },
-        "aadTenantId": {
+        "fileServerPrefix": {
             "defaultValue": "",
             "type": "string",
             "metadata": {
-                "description": "(Required when isServicePrincipal = True) This value identifies the Azure AD tenant of the service principal."
+                "description": "Provide file server prefix"
+            }
+        },
+        "fileServerVmSize": {
+            "defaultValue": "",
+            "type": "string",
+            "metadata": {
+                "description": "Provide file server vm size"
+            }
+        },
+        "fileServerEachDiskInSize": {
+            "defaultValue": 1000,
+            "type": "int",
+            "metadata": {
+                "description": "Provide each disk in size"
+            }
+        },
+        "fileServerNumberOfDisks": {
+            "defaultValue": 1,
+            "type": "int",
+            "metadata": {
+                "description": "Provide number of data disks"
             }
         },
         "location": {
@@ -259,11 +275,7 @@
         "existingDomainUsername": "[first(split(parameters('existingDomainUPN'), '@'))]",
         "vhds": "[concat('vhds','/', variables('rdshPrefix'))]",
         "subnet-id": "[resourceId(parameters('virtualNetworkResourceGroupName'),'Microsoft.Network/virtualNetworks/subnets',parameters('existingVnetName'), parameters('existingSubnetName'))]",
-        "existingTenantName": "[replace(parameters('existingTenantName'),'\"','')]",
         "hostPoolName": "[replace(parameters('hostPoolName'),'\"','')]",
-        "hostPoolFriendlyName": "[variables('hostPoolName')]",
-        "hostPoolDescription": "Created through ARM template",
-        "registrationExpirationHours": "48",
         "vmTemplateName": "[concat( if(variables('rdshManagedDisks'), 'managedDisks', 'unmanagedDisks'), '-', toLower(replace(parameters('rdshImageSource'),' ', '')), 'vm')]",
         "vmTemplateUri": "[concat(parameters('_artifactsLocation'),'/nestedtemplates/',variables('vmTemplateName'),'.json', parameters('_artifactsLocationSasToken'))]",
         "indexStartValue": "[add(parameters('indexStart'),1)]",
@@ -278,7 +290,20 @@
                     }
                 }
             ]
-        }
+        },
+        "fsGalleryImageSKU": "[if(or(equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session-with-Office-365-ProPlus'),equals(parameters('rdshGalleryImageSKU'), 'Windows-10-Enterprise-multi-session')),'2016-Datacenter',parameters('rdshGalleryImageSKU'))]",
+        "isFileSeverConfiguration": "[If(empty(parameters('fileServerPrefix')),bool('False'),bool('True'))]",
+        "fileservername": "fileservvm",
+        "empty": [],
+        "varFileServerPrefix": "[If(empty(parameters('fileServerPrefix')),variables('fileservername'),parameters('fileServerPrefix'))]",
+        "varStorageAccountKey": "[If(empty(parameters('fileServerPrefix')),parameters('fsStorageAccountKey'),variables('fileservername'))]",
+        "fileServerTemplateUri": "[If(variables('isFileSeverConfiguration'), concat(parameters('_artifactsLocation'),'/nestedtemplates/','fileSeverConfiguration.json'),variables('empty'))]",
+        "hostpoolFolderName": "[concat(parameters('hostPoolName'),'-','UserProfiles')]",
+        "sharedLocationPath": "[concat('\\\\',variables('varFileServerPrefix'),'\\',variables('hostpoolFolderName'))]",
+        "varSharedLocationPath": "[If(empty(parameters('fileServerPrefix')),'fsAzureFileShare',variables('sharedLocationPath'))]",
+        "fileShareURI": "[If(variables('isFileSeverConfiguration'),variables('sharedLocationPath'),parameters('fileShareURI'))]",
+        "filescriptURI": "[concat(parameters('_artifactsLocation'),'/DSC/fileServerConfig.ps1')]",
+        "Usernames": "[concat(parameters('existingDomainUPN'),',',variables('existingDomainUsername'))]"
     },
     "resources": [
         {
@@ -294,6 +319,107 @@
                 "platformFaultDomainCount": 2
             },
             "condition": "[equals(parameters('enablePersistentDesktop'),bool('False'))]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "vmCreation-FileSever",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('fileServerTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "fileServerGalleryImageSKU": {
+                        "value": "[variables('fsGalleryImageSKU')]"
+                    },
+                    "fsPrefix": {
+                        "value": "[parameters('fileServerPrefix')]"
+                    },
+                    "fileServerVMDiskType": {
+                        "value": "[parameters('rdshVMDiskType')]"
+                    },
+                    "fsVmSize": {
+                        "value": "[parameters('fileServerVmSize')]"
+                    },
+                    "existingDomainusername": {
+                        "value": "[variables('existingDomainUsername')]"
+                    },
+                    "existingDomainPassword": {
+                        "value": "[parameters('existingDomainPassword')]"
+                    },
+                    "subnet-id": {
+                        "value": "[variables('subnet-id')]"
+                    },
+                    "vhds": {
+                        "value": "[concat('vhds','/',parameters('fileServerPrefix'))]"
+                    },
+                    "fsEachDiskInSize": {
+                        "value": "[parameters('fileServerEachDiskInSize')]"
+                    },
+                    "fSNumberOfDisks": {
+                        "value": "[parameters('fileServerNumberOfDisks')]"
+                    },
+                    "location": {
+                        "value": "[parameters('location')]"
+                    }
+                }
+            },
+            "condition": "[equals(variables('isFileSeverConfiguration'),bool('True'))]"
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2018-10-01",
+            "name": "[concat(variables('varFileServerPrefix'),'/','joindomain')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "vmCreation-FileSever"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "JsonADDomainExtension",
+                "typeHandlerVersion": "1.3",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "name": "[parameters('domainToJoin')]",
+                    "ouPath": "[parameters('ouPath')]",
+                    "user": "[parameters('existingDomainUPN')]",
+                    "restart": "true",
+                    "options": "3"
+                },
+                "protectedSettings": {
+                    "password": "[parameters('existingDomainPassword')]"
+                }
+            },
+            "condition": "[equals(variables('isFileSeverConfiguration'),bool('True'))]"
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2015-06-15",
+            "name": "[concat(variables('varFileServerPrefix'),'/','FileServerConfig')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "vmCreation-FileSever",
+                "[concat('Microsoft.Compute/virtualMachines/',variables('varFileServerPrefix'),'/extensions/joindomain')]"
+            ],
+            "tags": {
+                "displayName": "script"
+            },
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.8",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[variables('filescriptURI')]"
+                    ],
+                    "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File fileServerConfig.ps1', ' -HostpoolFolderName \"', variables('HostpoolFolderName'), '\"', ' ', ' -Username \"', variables('existingDomainUsername'), '\"')]"
+                }
+            },
+            "condition": "[equals(variables('isFileSeverConfiguration'),bool('True'))]"
         },
         {
             "type": "Microsoft.Resources/deployments",
@@ -381,7 +507,8 @@
                     "ouPath": "[parameters('ouPath')]",
                     "user": "[parameters('existingDomainUPN')]",
                     "restart": "true",
-                    "options": "3"
+                    "options": "3","NumberOfRetries": 4,
+                    "RetryIntervalInMilliseconds": 30000
                 },
                 "protectedSettings": {
                     "password": "[parameters('existingDomainPassword')]"
@@ -407,24 +534,10 @@
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "modulesUrl": "[concat(parameters('_artifactsLocation'),'/DSC/Configuration.zip',parameters('_artifactsLocationSasToken'))]",
-                    "configurationFunction": "Configuration.ps1\\AdditionalSessionHosts",
+                    "configurationFunction": "Configuration.ps1\\AddSessionHost",
                     "properties": {
-                        "TenantAdminCredentials": {
-                            "userName": "[parameters('tenantAdminUpnOrApplicationId')]",
-                            "password": "PrivateSettingsRef:tenantAdminPassword"
-                        },
-                        "RDBrokerURL": "[parameters('rdBrokerURL')]",
-                        "DefinedTenantGroupName": "[parameters('existingTenantGroupName')]",
-                        "TenantName": "[variables('existingTenantName')]",
                         "HostPoolName": "[variables('hostPoolName')]",
-                        "Hours": "[variables('registrationExpirationHours')]",
-                        "isServicePrincipal": "[parameters('isServicePrincipal')]",
-                        "AadTenantId": "[parameters('aadTenantId')]"
-                    }
-                },
-                "ProtectedSettings": {
-                    "items": {
-                        "tenantAdminPassword": "[parameters('tenantAdminPassword')]"
+                        "RegistrationInfoToken": "[Parameters('hostpoolToken')]"
                     }
                 }
             },
@@ -435,7 +548,6 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "condition": "[equals(parameters('isFSLogixContainerConfiguration'),bool('True'))]",
             "apiVersion": "2015-06-15",
             "name": "[concat(variables('rdshPrefix'),if(less(variables('indexStartValue'),10),concat('0',copyindex(variables('indexStartValue'))),concat(copyindex(variables('indexStartValue')))),'/','FSLogixConfig')]",
             "location": "[resourceGroup().location]",
@@ -454,18 +566,48 @@
                     "fileUris": [
                         "[variables('scriptURI')]"
                     ],
-                    "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File FSLogixConfiguration.ps1', ' -StorageAccountKey \"', parameters('fsStorageAccountKey'), '\"', ' ', ' -FileShareURL \"', parameters('fileShareURI'), '\"')]"
+                    "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File FSLogixConfiguration.ps1', ' -StorageAccountKey \"', variables('varStorageAccountKey'), '\"', ' ', ' -FileShareURL \"', variables('fileShareURI'), '\"',' ', ' -sharedLocationPath \"', variables('varSharedLocationPath'), '\"')]"
                 }
             },
             "copy": {
                 "name": "rdsh-vm-loop",
                 "count": "[parameters('rdshNumberOfInstances')]"
-            }
+            },
+            "condition": "[equals(parameters('isFSLogixContainerConfiguration'),bool('True'))]"
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2015-06-15",
+            "name": "[concat(variables('rdshPrefix'),if(less(variables('indexStartValue'),10),concat('0',copyindex(variables('indexStartValue'))),concat(copyindex(variables('indexStartValue')))),'/','FSLogixConfig')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "additional-rdsh-dsc-loop"
+            ],
+            "tags": {
+                "displayName": "script"
+            },
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.8",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[variables('scriptURI')]"
+                    ],
+                    "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File UserSessionShadowing.ps1', ' -IsUserSessionShadow \"', parameters('IsUserSessionShadow'), '\"', ' ', ' -ShadowSessionMSRA \"', parameters('ShadowSessionMSRA'), '\"',' ', ' -ShadowSessionMSRAOption \"', parameters('ShadowSessionMSRAOption'), '\"',' ', ' -ShadowSessionMSTSCOption \"', parameters('ShadowSessionMSTSCOption'), '\"')]"
+                }
+            },
+            "copy": {
+                "name": "rdsh-vm-loop",
+                "count": "[parameters('rdshNumberOfInstances')]"
+            },
+            "condition": "[equals(parameters('IsUserSessionShadow'),bool('True'))]"
         }
     ],
     "outputs": {
         "rdshVmNamesObject": {
-            "type": "Object",
+            "type": "object",
             "value": "[variables('rdshVmNamesOutput')]"
         }
     }
