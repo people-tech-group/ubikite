@@ -6,25 +6,25 @@ This script is used configure the User session shadow.
 #>
 param(
 [Parameter(mandatory = $false)]
-[bool]$IsUserSessionShadow,
+[string]$IsUserSessionShadow,
 [Parameter(mandatory = $false)]
 [string]$ShadowSessionMSTSCOption,
 [Parameter(mandatory = $false)]
-[bool]$ShadowSessionMSRA,
+[string]$ShadowSessionMSRA,
 [Parameter(mandatory = $false)]
 [string]$ShadowSessionMSRAOption
 )
 
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 # Check if user session shadow setup enable
-if($IsUserSessionShadow){
+if($IsUserSessionShadow -eq "true"){
 $GpDownloadURI="https://raw.githubusercontent.com/people-tech-group/ubikite/master/Add%20Sessionhosts%20to%20hostpool/DSC/GroupPolicies.zip"
 $OutFile= "C:\GroupPolicies.zip"
 $DestinationPath="C:\GroupPolicies"
 New-Item -Path $DestinationPath -ItemType "directory"
 Invoke-WebRequest -Uri $GpDownloadURI -OutFile $OutFile
 Expand-Archive -Path $OutFile -DestinationPath $DestinationPath
-If($ShadowSessionMSRA){
+If($ShadowSessionMSRA -eq "true"){
 # Activate Remote Assistance (automated)
 REG ADD "HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance" /v fAllowToGetHelp /t REG_DWORD /d 1 /f
 # Configure firewall policies on your WVD
