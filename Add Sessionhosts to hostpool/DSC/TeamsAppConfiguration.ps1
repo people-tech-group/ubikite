@@ -7,11 +7,11 @@ This script is used to setup Microsoft teams app in VDI environment.
 
 param(
 [Parameter(mandatory = $True)]
-[bool]$IsTeamsAppSetup
+[string]$IsTeamsAppSetup
 )
 
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
-if($IsTeamsAppSetup){
+if($IsTeamsAppSetup -eq "true"){
 # Add registery of microsoft teams inside sessionhost
 REG add "HKLM\SOFTWARE\Microsoft\Teams" /v IsWVDEnvironment /t REG_DWORD /d 1 /f
 $TeamsInstaller = "https://statics.teams.cdn.office.net/production-windows-x64/1.3.00.4461/Teams_windows_x64.msi"
