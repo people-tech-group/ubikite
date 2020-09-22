@@ -20,9 +20,10 @@ $DiskLetter = $DiskPartition.DriveLetter
 $DiskDrive = $DiskLetter + ":\"
 New-Item -Name $HostpoolFolderName -Path $DiskDrive -ItemType Directory
 $Path = $DiskDrive + $HostpoolFolderName
-$c = new-CimSession -ComputerName $env:COMPUTERNAME
+<# $c = new-CimSession -ComputerName $env:COMPUTERNAME
 New-SmbShare -Name $HostpoolFolderName -Path $Path -CimSession $c `
   -Description 'Shared Folder for $HostpoolName users' `
-  -FullAccess $Usernames -ReadAccess Everyone -ChangeAccess Everyone
+  -FullAccess $Usernames -ReadAccess Everyone -ChangeAccess Everyone#>
+  New-SmbShare -Name Data -Path $Path | Grant-SmbShareAccess -AccountName Everyone -AccessRight Full -Force
   }
 
