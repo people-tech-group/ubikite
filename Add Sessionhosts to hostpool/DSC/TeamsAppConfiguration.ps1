@@ -20,7 +20,8 @@ $MicrosoftViualCpp = "https://aka.ms/vs/16/release/vc_redist.x64.exe"
 $DestinationPath="C:\TeamsInstallers"
 New-Item -Path $DestinationPath -ItemType "directory"
 Invoke-WebRequest -Uri $TeamsInstaller -OutFile $DestinationPath\Teams_windows_x64-01.msi
-msiexec /i c:\TeamsInstallers\Teams_windows_x64.msi /l*v c:\TeamsInstallers\Teams.log ALLUSER=1 ALLUSERS=1
+$TeamAppInstallerPath = Get-ChildItem -LiteralPath $DestinationPath | Where-Object {$_.Name -match "Teams_windows*"} | select FullName
+msiexec /i $TeamAppInstallerPath.FullName /l*v c:\TeamsInstallers\Teams.log ALLUSER=1 ALLUSERS=1
 Invoke-WebRequest -Uri $MicrosoftViualCpp -OutFile $DestinationPath\vc_redist.x64.exe
 Invoke-WebRequest -Uri $WebRTC -OutFile $DestinationPath\MsRdcWebRTCSvc_HostSetup_0.11.0_x64.msi
 Invoke-Expression -Command "cmd.exe /c 'c:\TeamsInstallers\vc_redist.x64.exe' /quiet"
