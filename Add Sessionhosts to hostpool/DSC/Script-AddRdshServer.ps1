@@ -54,8 +54,6 @@ else
     Write-Log "AgentInstaller is $DeployAgentLocation\RDAgentBootLoaderInstall, InfraInstaller is $DeployAgentLocation\RDInfraAgentInstall, SxS is $DeployAgentLocation\RDInfraSxSStackInstall"
     $DAgentInstall = .\DeployAgent.ps1 -AgentBootServiceInstallerFolder "$DeployAgentLocation\RDAgentBootLoaderInstall" `
                                        -AgentInstallerFolder "$DeployAgentLocation\RDInfraAgentInstall" `
-                                       -SxSStackInstallerFolder "$DeployAgentLocation\RDInfraSxSStackInstall" `
-                                       -EnableSxSStackScriptFolder "$DeployAgentLocation\EnableSxSStackScript" `
                                        -RegistrationToken $RegistrationInfoToken `
                                        -StartAgent $true `
                                        -rdshIs1809OrLater $rdshIs1809OrLaterBool
