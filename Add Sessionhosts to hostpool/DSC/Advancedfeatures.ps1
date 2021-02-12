@@ -12,6 +12,10 @@ param(
     [string]$FileShareURL,
 
     [Parameter(mandatory = $false)]
+    [string]$sharedLocationPath,
+
+
+    [Parameter(mandatory = $false)]
     [string]$IsTeamsAppSetup,
 
     [Parameter(mandatory = $false)]
