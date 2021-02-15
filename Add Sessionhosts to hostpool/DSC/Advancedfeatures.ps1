@@ -137,6 +137,6 @@ if ($IsTeamsAppSetup -eq "true") {
     msiexec /i $TeamAppInstallerPath.FullName /l*v c:\TeamsInstallers\Teams.log ALLUSER=1 ALLUSERS=1
     Invoke-WebRequest -Uri $MicrosoftViualCpp -OutFile $DestinationPath\vc_redist.x64.exe
     Invoke-WebRequest -Uri $WebRTC -OutFile $DestinationPath\MsRdcWebRTCSvc_HostSetup_0.11.0_x64.msi
-    Invoke-Expression -Command "cmd.exe /c 'c:\TeamsInstallers\vc_redist.x64.exe' /quiet"
-    Invoke-Expression -Command "cmd.exe /c 'c:\TeamsInstallers\MsRdcWebRTCSvc_HostSetup_0.11.0_x64.msi' /quiet"
+    Invoke-Expression -Command "cmd.exe /c 'c:\TeamsInstallers\vc_redist.x64.exe' /quiet /norestart"
+    Invoke-Expression -Command "cmd.exe /c 'c:\TeamsInstallers\MsRdcWebRTCSvc_HostSetup_0.11.0_x64.msi' /quiet /norestart"
 }
