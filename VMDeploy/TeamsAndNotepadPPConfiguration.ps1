@@ -30,7 +30,16 @@ param(
 Start-Sleep -Seconds 10
 
 #Install Notepad++
-Invoke-WebRequest -Uri 'https://notepad-plus-plus.org/repository/7.x/7.7.1/npp.7.7.1.Installer.x64.exe' -OutFile 'c:\temp\notepadplusplus.exe'
-Invoke-Expression -Command 'c:\temp\notepadplusplus.exe /S'
+# Let's go directly to the website and see what it lists as the current version
+$BaseUri = "https://notepad-plus-plus.org"
+$BasePage = Invoke-WebRequest -Uri $BaseUri -UseBasicParsing
+$ChildPath = $BasePage.Links | Where-Object { $_.outerHTML -like '*Current Version*' } | Select-Object -ExpandProperty href
+# Now let's go to the latest version's page and find the installer
+$DownloadPageUri = $BaseUri + $ChildPath
+# Download and install the notepad plus plus application
+Invoke-WebRequest -Uri $DownloadPageUri -OutFile 'C:\notepadplusplus.exe'
+Invoke-Expression -Command 'C:\notepadplusplus.exe /S'
+Start-Sleep -Seconds 10
+Remove-Item -Path 'C:\notepadplusplus.exe' -Recurse -Force
 
 }
