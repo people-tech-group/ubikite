@@ -8,6 +8,7 @@ param(
 	[Parameter(mandatory = $false)]
     [string]$IsTeamsAppandNotepadPPSetup
 )
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine -Force -Confirm:$false
 	# If install teamsapp
 	if ($IsTeamsAppandNotepadPPSetup -eq "true") {
 	# Add registery of microsoft teams inside sessionhost
